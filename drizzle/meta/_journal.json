@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776121182391,
+      "tag": "0000_flippant_vargas",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776121403629,
+      "tag": "0001_chemical_slipstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776121626722,
+      "tag": "0002_unusual_harry_osborn",
+      "breakpoints": true
+    }
+  ]
+}
