@@ -43,74 +43,85 @@
 }
 
 :root {
-  --primary: oklch(0.55 0.2 260);
-  --primary-foreground: oklch(0.98 0.001 0);
-  --sidebar-primary: oklch(0.5 0.18 260);
-  --sidebar-primary-foreground: oklch(0.98 0.001 0);
-  --chart-1: oklch(0.6 0.15 260);
-  --chart-2: oklch(0.55 0.2 260);
-  --chart-3: oklch(0.5 0.18 260);
-  --chart-4: oklch(0.45 0.16 260);
-  --chart-5: oklch(0.4 0.14 260);
-  --radius: 0.75rem;
-  --background: oklch(0.98 0.001 0);
-  --foreground: oklch(0.2 0.01 0);
-  --card: oklch(0.995 0 0);
-  --card-foreground: oklch(0.2 0.01 0);
-  --popover: oklch(0.995 0 0);
-  --popover-foreground: oklch(0.2 0.01 0);
-  --secondary: oklch(0.6 0.12 280);
-  --secondary-foreground: oklch(0.98 0.001 0);
-  --muted: oklch(0.93 0.002 0);
-  --muted-foreground: oklch(0.5 0.01 0);
-  --accent: oklch(0.55 0.2 260);
-  --accent-foreground: oklch(0.98 0.001 0);
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.98 0.001 0);
-  --border: oklch(0.92 0.002 0);
-  --input: oklch(0.95 0.001 0);
-  --ring: oklch(0.55 0.2 260);
-  --sidebar: oklch(0.96 0.001 0);
-  --sidebar-foreground: oklch(0.2 0.01 0);
-  --sidebar-accent: oklch(0.55 0.2 260);
-  --sidebar-accent-foreground: oklch(0.98 0.001 0);
-  --sidebar-border: oklch(0.92 0.002 0);
-  --sidebar-ring: oklch(0.55 0.2 260);
+  /* A soft, modern, slightly cool-toned light theme */
+  --background: oklch(0.98 0.01 240);
+  --foreground: oklch(0.25 0.02 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.02 240);
+  
+  /* Vibrant indigo/blue primary */
+  --primary: oklch(0.55 0.22 260);
+  --primary-foreground: oklch(0.98 0 0);
+  
+  /* Soft lavender secondary */
+  --secondary: oklch(0.92 0.04 260);
+  --secondary-foreground: oklch(0.3 0.05 260);
+  
+  --muted: oklch(0.95 0.02 240);
+  --muted-foreground: oklch(0.55 0.02 240);
+  
+  --accent: oklch(0.92 0.04 260);
+  --accent-foreground: oklch(0.3 0.05 260);
+  
+  --destructive: oklch(0.6 0.18 20);
+  --destructive-foreground: oklch(0.98 0 0);
+  
+  --border: oklch(0.9 0.02 240);
+  --input: oklch(0.9 0.02 240);
+  --ring: oklch(0.55 0.22 260);
+  
+  --sidebar: oklch(0.98 0.01 240);
+  --sidebar-foreground: oklch(0.25 0.02 240);
+  --sidebar-primary: oklch(0.55 0.22 260);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.92 0.04 260);
+  --sidebar-accent-foreground: oklch(0.3 0.05 260);
+  --sidebar-border: oklch(0.9 0.02 240);
+  --sidebar-ring: oklch(0.55 0.22 260);
+  
+  --radius: 1rem;
 }
 
 .dark {
-  --primary: oklch(0.6 0.18 260);
-  --primary-foreground: oklch(0.98 0.001 0);
-  --sidebar-primary: oklch(0.55 0.2 260);
-  --sidebar-primary-foreground: oklch(0.98 0.001 0);
-  --background: oklch(0.12 0.008 260);
-  --foreground: oklch(0.92 0.005 0);
-  --card: oklch(0.17 0.01 260);
-  --card-foreground: oklch(0.92 0.005 0);
-  --popover: oklch(0.17 0.01 260);
-  --popover-foreground: oklch(0.92 0.005 0);
-  --secondary: oklch(0.35 0.12 280);
-  --secondary-foreground: oklch(0.92 0.005 0);
-  --muted: oklch(0.25 0.008 260);
-  --muted-foreground: oklch(0.65 0.01 0);
-  --accent: oklch(0.6 0.18 260);
-  --accent-foreground: oklch(0.98 0.001 0);
-  --destructive: oklch(0.65 0.18 25);
-  --destructive-foreground: oklch(0.98 0.001 0);
-  --border: oklch(0.25 0.008 260);
-  --input: oklch(0.2 0.01 260);
-  --ring: oklch(0.6 0.18 260);
-  --chart-1: oklch(0.6 0.15 260);
-  --chart-2: oklch(0.55 0.2 260);
-  --chart-3: oklch(0.5 0.18 260);
-  --chart-4: oklch(0.45 0.16 260);
-  --chart-5: oklch(0.4 0.14 260);
-  --sidebar: oklch(0.15 0.009 260);
-  --sidebar-foreground: oklch(0.92 0.005 0);
-  --sidebar-accent: oklch(0.6 0.18 260);
-  --sidebar-accent-foreground: oklch(0.98 0.001 0);
-  --sidebar-border: oklch(0.25 0.008 260);
-  --sidebar-ring: oklch(0.6 0.18 260);
+  /* Deep, rich, neon-inspired dark theme */
+  --background: oklch(0.15 0.02 280);
+  --foreground: oklch(0.95 0.01 280);
+  --card: oklch(0.18 0.02 280);
+  --card-foreground: oklch(0.95 0.01 280);
+  --popover: oklch(0.18 0.02 280);
+  --popover-foreground: oklch(0.95 0.01 280);
+  
+  /* Neon purple/indigo primary */
+  --primary: oklch(0.65 0.25 280);
+  --primary-foreground: oklch(0.98 0 0);
+  
+  /* Deep muted secondary */
+  --secondary: oklch(0.25 0.05 280);
+  --secondary-foreground: oklch(0.95 0.01 280);
+  
+  --muted: oklch(0.22 0.03 280);
+  --muted-foreground: oklch(0.7 0.02 280);
+  
+  --accent: oklch(0.25 0.05 280);
+  --accent-foreground: oklch(0.95 0.01 280);
+  
+  --destructive: oklch(0.6 0.18 20);
+  --destructive-foreground: oklch(0.98 0 0);
+  
+  --border: oklch(0.25 0.03 280);
+  --input: oklch(0.25 0.03 280);
+  --ring: oklch(0.65 0.25 280);
+  
+  --sidebar: oklch(0.15 0.02 280);
+  --sidebar-foreground: oklch(0.95 0.01 280);
+  --sidebar-primary: oklch(0.65 0.25 280);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.05 280);
+  --sidebar-accent-foreground: oklch(0.95 0.01 280);
+  --sidebar-border: oklch(0.25 0.03 280);
+  --sidebar-ring: oklch(0.65 0.25 280);
 }
 
 @layer base {
@@ -138,24 +149,11 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -166,16 +164,16 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
 }

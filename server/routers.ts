@@ -1,6 +1,3 @@
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -16,15 +13,10 @@ import {
 import { invokeLLM } from "./_core/llm";
 
 export const appRouter = router({
-  system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+    logout: publicProcedure.mutation(() => {
+      return { success: true } as const;
     }),
   }),
 
@@ -61,10 +53,9 @@ export const appRouter = router({
     }),
 
     delete: protectedProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ id: z.string() }))
       .mutation(async ({ ctx, input }) => {
         try {
-          // Verify ownership before deleting
           const conversation = await getConversationIfOwned(input.id, ctx.user.id);
           if (!conversation) {
             throw new TRPCError({
@@ -92,10 +83,9 @@ export const appRouter = router({
       }),
 
     rename: protectedProcedure
-      .input(z.object({ id: z.number(), title: z.string().min(1).max(255) }))
+      .input(z.object({ id: z.string(), title: z.string().min(1).max(255) }))
       .mutation(async ({ ctx, input }) => {
         try {
-          // Verify ownership before renaming
           const conversation = await getConversationIfOwned(input.id, ctx.user.id);
           if (!conversation) {
             throw new TRPCError({
@@ -129,10 +119,9 @@ export const appRouter = router({
 
   messages: router({
     list: protectedProcedure
-      .input(z.object({ conversationId: z.number() }))
+      .input(z.object({ conversationId: z.string() }))
       .query(async ({ ctx, input }) => {
         try {
-          // Verify ownership of conversation
           const conversation = await getConversationIfOwned(
             input.conversationId,
             ctx.user.id
@@ -156,10 +145,9 @@ export const appRouter = router({
       }),
 
     send: protectedProcedure
-      .input(z.object({ conversationId: z.number(), content: z.string().min(1) }))
+      .input(z.object({ conversationId: z.string(), content: z.string().min(1) }))
       .mutation(async ({ ctx, input }) => {
         try {
-          // Verify ownership of conversation
           const conversation = await getConversationIfOwned(
             input.conversationId,
             ctx.user.id
@@ -171,7 +159,6 @@ export const appRouter = router({
             });
           }
 
-          // Add user message
           const userMessage = await addMessage(
             input.conversationId,
             "user",
@@ -185,23 +172,19 @@ export const appRouter = router({
             });
           }
 
-          // Get all messages for context
           const allMessages = await getConversationMessages(input.conversationId);
 
-          // Prepare messages for LLM
           const llmMessages = allMessages.map((msg) => ({
             role: msg.role as "user" | "assistant",
             content: msg.content,
           }));
 
-          // Get response from LLM
           let assistantContent = "";
           try {
             const response = await invokeLLM({
               messages: llmMessages,
             });
 
-            // Extract content from response
             const firstChoice = response.choices?.[0];
             if (firstChoice && "message" in firstChoice) {
               const message = firstChoice.message as { content?: string };
@@ -219,7 +202,6 @@ export const appRouter = router({
             });
           }
 
-          // Add assistant message
           const assistantMessage = await addMessage(
             input.conversationId,
             "assistant",

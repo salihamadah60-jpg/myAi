@@ -11,7 +11,7 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   const sendMessageWithStream = useCallback(
-    async (conversationId: number, content: string) => {
+    async (conversationId: string | number, content: string, provider?: string, model?: string) => {
       setIsStreaming(true);
       setError(null);
 
@@ -27,6 +27,8 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
           body: JSON.stringify({
             conversationId,
             content,
+            provider,
+            model
           }),
         });
 

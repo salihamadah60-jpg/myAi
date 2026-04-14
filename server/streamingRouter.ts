@@ -1,22 +1,23 @@
 import { Router } from "express";
-import { protectedMiddleware } from "./_core/trpc";
-import { z } from "zod";
 import {
   getConversationIfOwned,
   getConversationMessages,
   addMessage,
 } from "./db";
 import { streamLLMResponse } from "./_core/llm";
+import * as db from "./db";
 
 const router = Router();
 
-// Middleware to verify user (simplified version)
+// Mock verify user for local development
 const verifyUser = async (req: any, res: any, next: any) => {
   try {
-    // This assumes the user is already attached to req by your auth middleware
-    if (!req.user) {
+    const openId = "local-dev-user";
+    let user = await db.getUserByOpenId(openId);
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+    req.user = user;
     next();
   } catch (error) {
     res.status(401).json({ error: "Unauthorized" });
@@ -25,9 +26,8 @@ const verifyUser = async (req: any, res: any, next: any) => {
 
 router.post("/messages/send-stream", verifyUser, async (req, res) => {
   try {
-    const { conversationId, content } = req.body;
+    const { conversationId, content, provider, model } = req.body;
 
-    // Validate input
     if (!conversationId || !content || typeof content !== "string") {
       return res.status(400).json({ error: "Invalid input" });
     }
@@ -36,7 +36,6 @@ router.post("/messages/send-stream", verifyUser, async (req, res) => {
       return res.status(400).json({ error: "Message cannot be empty" });
     }
 
-    // Verify ownership of conversation
     const conversation = await getConversationIfOwned(
       conversationId,
       req.user.id
@@ -45,7 +44,6 @@ router.post("/messages/send-stream", verifyUser, async (req, res) => {
       return res.status(404).json({ error: "Conversation not found" });
     }
 
-    // Add user message
     const userMessage = await addMessage(
       conversationId,
       "user",
@@ -56,16 +54,13 @@ router.post("/messages/send-stream", verifyUser, async (req, res) => {
       return res.status(500).json({ error: "Failed to save user message" });
     }
 
-    // Get all messages for context
     const allMessages = await getConversationMessages(conversationId);
 
-    // Prepare messages for LLM
-    const llmMessages = allMessages.map((msg) => ({
+    const llmMessages = allMessages.map((msg: any) => ({
       role: msg.role as "user" | "assistant",
       content: msg.content,
     }));
 
-    // Set up streaming response
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
@@ -73,15 +68,15 @@ router.post("/messages/send-stream", verifyUser, async (req, res) => {
     let fullContent = "";
 
     try {
-      // Stream the LLM response
       for await (const chunk of streamLLMResponse({
         messages: llmMessages,
+        provider,
+        model
       })) {
         fullContent += chunk;
         res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
       }
 
-      // Save the complete assistant message
       const assistantMessage = await addMessage(
         conversationId,
         "assistant",

@@ -6,7 +6,7 @@ import ConversationSidebar from "@/components/ConversationSidebar";
 import ChatBoxStreaming from "@/components/ChatBoxStreaming";
 import ChatInput from "@/components/ChatInput";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, X, Moon, Sun, Globe } from "lucide-react";
+import { LogOut, Menu, X, Moon, Sun, Globe, Cpu } from "lucide-react";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -16,16 +16,28 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const MODELS = [
+  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "forge" },
+  { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B", provider: "groq" },
+  { id: "deepseek-r1-distill-llama-70b", name: "DeepSeek R1 70B", provider: "groq" },
+  { id: "llama3", name: "Ollama Llama 3", provider: "ollama" },
+  { id: "mistral", name: "Ollama Mistral", provider: "ollama" },
+];
 
 export default function ChatStreaming() {
   const { user, logout, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [streamingContent, setStreamingContent] = useState("");
+  const [selectedModel, setSelectedModel] = useState(MODELS[0]);
 
   // Fetch conversations
   const conversationsQuery = trpc.conversations.list.useQuery(undefined, {
@@ -34,7 +46,7 @@ export default function ChatStreaming() {
 
   // Fetch messages for active conversation
   const messagesQuery = trpc.messages.list.useQuery(
-    { conversationId: activeConversationId! },
+    { conversationId: activeConversationId as any },
     { enabled: isAuthenticated && activeConversationId !== null }
   );
 
@@ -42,7 +54,7 @@ export default function ChatStreaming() {
   const createConversationMutation = trpc.conversations.create.useMutation({
     onSuccess: (newConversation) => {
       if (newConversation) {
-        setActiveConversationId(newConversation.id);
+        setActiveConversationId(newConversation.id as any);
         conversationsQuery.refetch();
       }
     },
@@ -71,7 +83,6 @@ export default function ChatStreaming() {
       setStreamingContent((prev) => prev + chunk);
     },
     onComplete: (fullContent) => {
-      // Refetch messages to get the saved assistant message
       setStreamingContent("");
       messagesQuery.refetch();
     },
@@ -88,7 +99,7 @@ export default function ChatStreaming() {
       conversationsQuery.data.length > 0 &&
       !activeConversationId
     ) {
-      setActiveConversationId(conversationsQuery.data[0]!.id);
+      setActiveConversationId(conversationsQuery.data[0]!.id as any);
     }
   }, [conversationsQuery.data, activeConversationId]);
 
@@ -100,7 +111,12 @@ export default function ChatStreaming() {
 
   const handleSendMessage = (content: string) => {
     if (activeConversationId) {
-      sendMessageWithStream(activeConversationId, content);
+      sendMessageWithStream(
+        activeConversationId, 
+        content, 
+        selectedModel.provider, 
+        selectedModel.id
+      );
     }
   };
 
@@ -123,23 +139,23 @@ export default function ChatStreaming() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed lg:static inset-y-0 left-0 z-40 transition-transform duration-300 lg:translate-x-0`}
+        } fixed lg:static inset-y-0 left-0 z-40 transition-transform duration-300 lg:translate-x-0 border-r border-border`}
       >
         <ConversationSidebar
           conversations={conversationsQuery.data || []}
-          activeConversationId={activeConversationId}
-          onSelectConversation={setActiveConversationId}
+          activeConversationId={activeConversationId as any}
+          onSelectConversation={(id) => setActiveConversationId(id as any)}
           onNewConversation={() => createConversationMutation.mutate()}
           onDeleteConversation={(id) =>
-            deleteConversationMutation.mutate({ id })
+            deleteConversationMutation.mutate({ id: id as any })
           }
           onRenameConversation={(id, title) =>
-            renameConversationMutation.mutate({ id, title })
+            renameConversationMutation.mutate({ id: id as any, title })
           }
           isLoading={
             createConversationMutation.isPending ||
@@ -157,7 +173,7 @@ export default function ChatStreaming() {
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col relative">
         {/* Header */}
         <div className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -167,75 +183,99 @@ export default function ChatStreaming() {
               className="lg:hidden"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-              {sidebarOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
-            <div>
-              <h1 className="font-semibold text-foreground">
+            <div className="hidden sm:block">
+              <h1 className="font-semibold text-foreground truncate max-w-[150px] md:max-w-[300px]">
                 {activeConversationId
                   ? conversationsQuery.data?.find(
-                      (c) => c.id === activeConversationId
+                      (c) => (c.id as any) === activeConversationId
                     )?.title || t("conversation")
                   : t("newConversation")}
               </h1>
-              {user && (
-                <p className="text-xs text-muted-foreground">
-                  {user.name || user.email}
-                </p>
-              )}
             </div>
           </div>
+
           <div className="flex items-center gap-2">
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              title={theme === "dark" ? t("lightMode") : t("darkMode")}
+            {/* Model Selector */}
+            <Select 
+              value={selectedModel.id} 
+              onValueChange={(val) => setSelectedModel(MODELS.find(m => m.id === val)!)}
             >
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
-            </Button>
+              <SelectTrigger className="w-[140px] md:w-[200px] h-9">
+                <Cpu className="w-4 h-4 mr-2 text-primary" />
+                <SelectValue placeholder="Select Model" />
+              </SelectTrigger>
+              <SelectContent>
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1.5">
+                  Select AI Model
+                </DropdownMenuLabel>
+                {MODELS.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Language Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" title={t("language")}>
-                  <Globe className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => setLanguage("ar")}
-                  className={language === "ar" ? "bg-accent" : ""}
-                >
-                  {t("arabic")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setLanguage("en")}
-                  className={language === "en" ? "bg-accent" : ""}
-                >
-                  {t("english")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-1 ml-1 border-l pl-2">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="h-9 w-9"
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
 
-            {/* Logout */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("signOut")}</span>
-            </Button>
+              {/* Language Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Globe className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setLanguage("ar")}
+                    className={language === "ar" ? "bg-accent" : ""}
+                  >
+                    {t("arabic")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setLanguage("en")}
+                    className={language === "en" ? "bg-accent" : ""}
+                  >
+                    {t("english")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* User Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                      {user?.name?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col">
+                      <span className="font-medium truncate">{user?.name}</span>
+                      <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {t("signOut")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
 
@@ -271,10 +311,14 @@ export default function ChatStreaming() {
                   streamingContent={streamingContent}
                   error={error}
                 />
-                <ChatInput
-                  onSend={handleSendMessage}
-                  isLoading={isStreaming}
-                />
+                <div className="p-4 bg-background/80 backdrop-blur-md">
+                  <div className="max-w-4xl mx-auto">
+                    <ChatInput
+                      onSend={handleSendMessage}
+                      isLoading={isStreaming}
+                    />
+                  </div>
+                </div>
               </>
             )}
           </div>
