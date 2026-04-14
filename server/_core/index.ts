@@ -8,6 +8,24 @@ import streamingRouter from "../streamingRouter";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
+const app = express();
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+app.use("/api/streaming", streamingRouter);
+
+app.use(
+  "/api/trpc",
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+  })
+);
+
+// Export the app so Vercel can use it as a Serverless Function
+export default app;
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
@@ -28,21 +46,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  const app = express();
   const server = createServer(app);
-  
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  
-  app.use("/api/streaming", streamingRouter);
-  
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
   
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
@@ -62,4 +66,7 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+// Only start the local server if we are NOT running on Vercel
+if (!process.env.VERCEL) {
+  startServer().catch(console.error);
+}
