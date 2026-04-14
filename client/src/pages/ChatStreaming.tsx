@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { useStreamingChat } from "@/hooks/useStreamingChat";
 import ConversationSidebar from "@/components/ConversationSidebar";
-import ChatBox from "@/components/ChatBox";
+import ChatBoxStreaming from "@/components/ChatBoxStreaming";
 import ChatInput from "@/components/ChatInput";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, X, Moon, Sun, Globe } from "lucide-react";
@@ -15,17 +16,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-export default function Chat() {
+export default function ChatStreaming() {
   const { user, logout, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [streamingContent, setStreamingContent] = useState("");
 
   // Fetch conversations
   const conversationsQuery = trpc.conversations.list.useQuery(undefined, {
@@ -37,19 +37,6 @@ export default function Chat() {
     { conversationId: activeConversationId! },
     { enabled: isAuthenticated && activeConversationId !== null }
   );
-
-  // Send message mutation
-  const sendMessageMutation = trpc.messages.send.useMutation({
-    onSuccess: () => {
-      setError(null);
-      messagesQuery.refetch();
-    },
-    onError: (err) => {
-      const errorMessage = err.message || "حدث خطأ أثناء إرسال الرسالة";
-      setError(errorMessage);
-      console.error("[Send Message Error]", err);
-    },
-  });
 
   // Create conversation mutation
   const createConversationMutation = trpc.conversations.create.useMutation({
@@ -78,6 +65,22 @@ export default function Chat() {
     },
   });
 
+  // Use streaming chat hook
+  const { isStreaming, error, sendMessageWithStream } = useStreamingChat({
+    onChunk: (chunk) => {
+      setStreamingContent((prev) => prev + chunk);
+    },
+    onComplete: (fullContent) => {
+      // Refetch messages to get the saved assistant message
+      setStreamingContent("");
+      messagesQuery.refetch();
+    },
+    onError: (err) => {
+      console.error("Streaming error:", err);
+      setStreamingContent("");
+    },
+  });
+
   // Set first conversation as active on load
   useEffect(() => {
     if (
@@ -93,6 +96,12 @@ export default function Chat() {
   const handleLogout = async () => {
     await logout();
     setLocation("/");
+  };
+
+  const handleSendMessage = (content: string) => {
+    if (activeConversationId) {
+      sendMessageWithStream(activeConversationId, content);
+    }
   };
 
   if (!isAuthenticated) {
@@ -256,19 +265,15 @@ export default function Chat() {
               </div>
             ) : (
               <>
-                <ChatBox
+                <ChatBoxStreaming
                   messages={messagesQuery.data || []}
-                  isLoading={sendMessageMutation.isPending}
+                  isLoading={isStreaming}
+                  streamingContent={streamingContent}
                   error={error}
                 />
                 <ChatInput
-                  onSend={(content) =>
-                    sendMessageMutation.mutate({
-                      conversationId: activeConversationId,
-                      content,
-                    })
-                  }
-                  isLoading={sendMessageMutation.isPending}
+                  onSend={handleSendMessage}
+                  isLoading={isStreaming}
                 />
               </>
             )}

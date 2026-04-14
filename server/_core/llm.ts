@@ -330,3 +330,116 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   return (await response.json()) as InvokeResult;
 }
+
+
+export async function invokeLLMStream(
+  params: InvokeParams
+): Promise<ReadableStream<string>> {
+  assertApiKey();
+
+  const {
+    messages,
+    tools,
+    toolChoice,
+    tool_choice,
+    outputSchema,
+    output_schema,
+    responseFormat,
+    response_format,
+  } = params;
+
+  const payload: Record<string, unknown> = {
+    model: "gemini-2.5-flash",
+    messages: messages.map(normalizeMessage),
+    stream: true,
+  };
+
+  if (tools && tools.length > 0) {
+    payload.tools = tools;
+  }
+
+  const normalizedToolChoice = normalizeToolChoice(
+    toolChoice || tool_choice,
+    tools
+  );
+  if (normalizedToolChoice) {
+    payload.tool_choice = normalizedToolChoice;
+  }
+
+  payload.max_tokens = 32768;
+  payload.thinking = {
+    budget_tokens: 128,
+  };
+
+  const normalizedResponseFormat = normalizeResponseFormat({
+    responseFormat,
+    response_format,
+    outputSchema,
+    output_schema,
+  });
+
+  if (normalizedResponseFormat) {
+    payload.response_format = normalizedResponseFormat;
+  }
+
+  const response = await fetch(resolveApiUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${ENV.forgeApiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
+    );
+  }
+
+  if (!response.body) {
+    throw new Error("Response body is null");
+  }
+
+  return response.body;
+}
+
+export async function* streamLLMResponse(
+  params: InvokeParams
+): AsyncGenerator<string, void, unknown> {
+  const stream = await invokeLLMStream(params);
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6);
+          if (data === "[DONE]") {
+            continue;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content || "";
+            if (content) {
+              yield content;
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}

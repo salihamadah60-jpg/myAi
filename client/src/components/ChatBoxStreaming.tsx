@@ -1,29 +1,35 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Message } from "../../../drizzle/schema";
 
-interface ChatBoxProps {
+interface ChatBoxStreamingProps {
   messages: Message[];
   isLoading: boolean;
+  streamingContent?: string;
   error?: string | null;
 }
 
-export default function ChatBox({ messages, isLoading, error }: ChatBoxProps) {
+export default function ChatBoxStreaming({
+  messages,
+  isLoading,
+  streamingContent = "",
+  error,
+}: ChatBoxStreamingProps) {
   const { t } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingContent]);
 
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && !isLoading && (
+        {messages.length === 0 && !isLoading && !streamingContent && (
           <div className="flex items-center justify-center h-full text-center">
             <div className="space-y-2">
               <p className="text-muted-foreground text-lg">
@@ -63,8 +69,19 @@ export default function ChatBox({ messages, isLoading, error }: ChatBoxProps) {
           </div>
         ))}
 
+        {/* Streaming Content */}
+        {streamingContent && (
+          <div className="flex justify-start animate-in fade-in">
+            <div className="bg-card text-card-foreground border border-border px-4 py-3 rounded-lg rounded-bl-none max-w-xs lg:max-w-md xl:max-w-lg">
+              <Streamdown className="text-sm leading-relaxed">
+                {streamingContent}
+              </Streamdown>
+            </div>
+          </div>
+        )}
+
         {/* Loading Indicator */}
-        {isLoading && (
+        {isLoading && !streamingContent && (
           <div className="flex justify-start animate-in fade-in">
             <div className="bg-card text-card-foreground border border-border px-4 py-3 rounded-lg rounded-bl-none flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-primary" />

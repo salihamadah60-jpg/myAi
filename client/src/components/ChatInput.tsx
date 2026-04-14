@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Send, Loader2 } from "lucide-react";
 
 interface ChatInputProps {
@@ -13,6 +14,7 @@ export default function ChatInput({
   isLoading,
   disabled = false,
 }: ChatInputProps) {
+  const { t } = useLanguage();
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -56,7 +58,7 @@ export default function ChatInput({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="اكتب رسالتك هنا... (Shift + Enter للسطر الجديد)"
+          placeholder={t("typeYourMessageHere")}
           disabled={isLoading || disabled}
           className="flex-1 px-4 py-2 bg-input border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed text-sm leading-relaxed"
           rows={1}
@@ -75,7 +77,7 @@ export default function ChatInput({
         </Button>
       </div>
       <p className="text-xs text-muted-foreground text-right">
-        اضغط Enter للإرسال أو Shift + Enter للسطر الجديد
+        {t("pressEnterToSend")}
       </p>
     </form>
   );
