@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,7 @@ export default function ConversationSidebar({
   onRenameConversation,
   isLoading,
 }: ConversationSidebarProps) {
+  const { t } = useLanguage();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -62,7 +64,7 @@ export default function ConversationSidebar({
           className="w-full gap-2 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
         >
           <Plus className="w-4 h-4" />
-          محادثة جديدة
+          {t("newConversation")}
         </Button>
       </div>
 
@@ -71,7 +73,7 @@ export default function ConversationSidebar({
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-sidebar-foreground/60">
             <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">لا توجد محادثات بعد</p>
+            <p className="text-sm">{t("startNewConversation")}</p>
           </div>
         ) : (
           <div className="space-y-2 p-2">
@@ -129,14 +131,14 @@ export default function ConversationSidebar({
                           }
                         >
                           <Edit2 className="w-4 h-4 mr-2" />
-                          إعادة تسمية
+                          {t("rename")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setDeleteId(conversation.id)}
                           className="text-destructive"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          حذف
+                          {t("delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -151,12 +153,12 @@ export default function ConversationSidebar({
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
-          <AlertDialogTitle>حذف المحادثة</AlertDialogTitle>
+          <AlertDialogTitle>{t("deleteConversation")}</AlertDialogTitle>
           <AlertDialogDescription>
-            هل أنت متأكد من رغبتك في حذف هذه المحادثة؟ لا يمكن التراجع عن هذا الإجراء.
+            {t("confirmDeleteConversation")}
           </AlertDialogDescription>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (deleteId) {
@@ -166,7 +168,7 @@ export default function ConversationSidebar({
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              حذف
+              {t("delete")}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
