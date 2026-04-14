@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Streamdown } from "streamdown";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { Message } from "../../../drizzle/schema";
+import type { Message } from "@shared/types";
 
 interface ChatBoxProps {
   messages: Message[];

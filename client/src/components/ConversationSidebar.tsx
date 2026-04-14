@@ -16,15 +16,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, MessageSquare, MoreVertical, Trash2, Edit2, Loader2 } from "lucide-react";
-import type { Conversation } from "../../../drizzle/schema";
+import type { Conversation } from "@shared/types";
 
 interface ConversationSidebarProps {
   conversations: Conversation[];
-  activeConversationId: number | null;
-  onSelectConversation: (id: number) => void;
+  activeConversationId: string | null;
+  onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
-  onDeleteConversation: (id: number) => void;
-  onRenameConversation: (id: number, title: string) => void;
+  onDeleteConversation: (id: string) => void;
+  onRenameConversation: (id: string, title: string) => void;
   isLoading: boolean;
 }
 
@@ -38,16 +38,16 @@ export default function ConversationSidebar({
   isLoading,
 }: ConversationSidebarProps) {
   const { t } = useLanguage();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
 
-  const handleStartEdit = (id: number, title: string) => {
+  const handleStartEdit = (id: string, title: string) => {
     setEditingId(id);
     setEditingTitle(title);
   };
 
-  const handleSaveEdit = (id: number) => {
+  const handleSaveEdit = (id: string) => {
     if (editingTitle.trim()) {
       onRenameConversation(id, editingTitle);
       setEditingId(null);

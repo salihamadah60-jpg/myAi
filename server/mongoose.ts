@@ -4,6 +4,17 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Thaker:772951869Th
 
 export async function connectMongo() {
   if (mongoose.connection.readyState >= 1) return;
+
+  // Global transform: _id -> id
+  mongoose.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+    }
+  });
+
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('[MongoDB] Connected successfully');

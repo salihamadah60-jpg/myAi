@@ -22,7 +22,6 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MODELS = [
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "forge" },
   { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B", provider: "groq" },
   { id: "deepseek-r1-distill-llama-70b", name: "DeepSeek R1 70B", provider: "groq" },
   { id: "llama3", name: "Ollama Llama 3", provider: "ollama" },
